@@ -1,7 +1,14 @@
-.venv/
-.idea/
+# Python virtual environment
 venv/
-venv
+__pycache__/
+*.pyc
 
+# Environment variables
+.env
 
-sour
+# IDE files
+.idea/
+.vscode/
+
+# Misc
+.DS_Store
