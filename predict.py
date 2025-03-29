@@ -51,10 +51,15 @@ warnings.filterwarnings('ignore')
 
 def run_prediction(applicant_id = '123456799', required_amount = 14000): 
     
+    print(f"Starting run_prediction with applicant_id={applicant_id}, required_amount={required_amount}\n")
+    print("[STARTED] Step 1: Data collection\n")
+
     # Step 1: Data collection - ideally this should retrieve data for specified applicant id
     data = retrieve_data_from_sql("fin_history")
     
-      # Example threshold amount
+    # Example threshold amount
+    print("[COMPLETED] Step 1: Data collection\n")
+    print("[STARTED] Step 2: Prepare data for DeepAR\n")
 
     # Step 2: Prepare data for DeepAR - 
     # - Split data 
@@ -68,35 +73,50 @@ def run_prediction(applicant_id = '123456799', required_amount = 14000):
     train_data = data.iloc[:split_idx]
 
     training_data, scaler = prep_data_for_deep_ar_model(train_data)
+    print("[COMPLETED] Step 2: Prepare data for DeepAR\n")
+    print("[STARTED] Step 3: Create and train model\n")
 
     # Step 3: Create and train model
     forecasting_model_for_validation = create_model_and_train(training_data)
+    print("[COMPLETED] Step 3: Create and train model\n")
+    print("[STARTED] Step 4: Generate forecasts")
 
     # Step 4: Generate forecasts
     validation_forecasts, validation_tss = generate_forecasts(forecasting_model_for_validation, training_data)
+    print("[COMPLETED] Step 4: Generate forecasts\n")
+    print("[STARTED] Step 5: Inverse transform forecasts\n")
 
     # Step 5: Inverse transform forecasts
     transformed_validation_forecast_values = inverse_transform_forecasts(validation_forecasts[0], scaler)
+    print("[COMPLETED] Step 5: Inverse transform forecasts\n")
+    print("[STARTED] Step 6: Get forecast data frames \n")
 
     # Step 6: Get forecast data frames
     (forecast_7days_validation_set, 
     forecast_14days_validation_set, 
     forecast_30days_validation_set
     ) = get_forecast_data_frames(transformed_validation_forecast_values, data)
+    print("[COMPLETED] Step 6: Get forecast data frames \n")
+    print("[STARTED] Step 7: Get evaluation metrics \n")
 
     # Step 7: Get evaluation metrics
     combined_rmse_df = get_combined_rmse(forecast_7days_validation_set, forecast_14days_validation_set, forecast_30days_validation_set)
+    print("[COMPLETED] Step 7: Get evaluation metrics  \n")
+    print("[STARTED] Step 8. Get hyperparameters for the experiment for reference \n")
+    
 
+    # Step 8. Get hyperparameters for the experiment for reference
     # Define the path to the lightning_logs directory
     logs_dir = "lightning_logs"
 
     # experiment_no
     experiment_no = get_experiment_number(logs_dir)
 
-    # Step 8. Get hyperparameters for the experiment for reference
     hyperparameters_path = f'lightning_logs/version_{experiment_no}/hparams.yaml'
     experiment_id = f'exp_{experiment_no}'
     hyperparameters_df = get_hyperparameters(hyperparameters_path, experiment_id)
+    print("[COMPLETED] Step 8. Get hyperparameters for the experiment for reference  \n")
+    print("[STARTED] Step 9: Extract key metrics for assessment using transformed values \n")
 
     # Step 9: Extract key metrics for assessment using transformed values
 
@@ -114,9 +134,13 @@ def run_prediction(applicant_id = '123456799', required_amount = 14000):
         # Check if actual falls within the prediction interval
         within_interval = final_p10 <= actual_final <= final_p90
     
+    print("[COMPLETED] Step 9: Extract key metrics for assessment using transformed values  \n")
+    print("[STARTED] Step 10: Get overall affordability assessment \n")
 
-    # Step 10: Get overaaffordability assessment
+    # Step 10: Get overall affordability assessment
     affordability_assessment = assess_affordability(required_amount, final_p10, final_p90)
+    print("[COMPLETED] Step 10: Get overall affordability assessment  \n")
+    print("[STARTED] Step 11: Get overall assessment \n")
 
     # Overall assessment 
     # Step 11: Get overall assessment
@@ -134,10 +158,15 @@ def run_prediction(applicant_id = '123456799', required_amount = 14000):
         error, 
         within_interval,
         )
+    print("[COMPLETED] Step 11: Get overall assessment \n")
+    print("[STARTED] Step 12: Concatenate hyperparameters and overall validation assessment into a single dataframe \n")
     # Step 12: Concatenate hyperparameters and overall validation assessment into a single dataframe
     hyperparameters_and_overall_validation_assessment_df = pd.concat([hyperparameters_df, overall_validation_forecast_assessment_df], ignore_index=True)
 
+    print("[COMPLETED] Step 12: Concatenate hyperparameters and overall validation assessment into a single dataframe \n")
+    print("[STARTED] Step 13: Insert into database\n")
 
+    # Step 13: Insert into database
     # insert in database 
     # ................MODIFY TO HAVE UNIQUE ID FOR EACH APPLICANT................
     #  1. Forecasts x 30 days 

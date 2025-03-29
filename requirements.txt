@@ -7,3 +7,4 @@ numpy==1.26.4
 scikit-learn==1.6.1
 psycopg2-binary==2.9.10
 orjson==3.10.16
+torch==2.2.2
