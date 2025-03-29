@@ -1,8 +1,9 @@
+functions-framework==3.0.0
+flask==2.0.1
+werkzeug==2.0.1
 gluonts[torch]==0.15.1
 pandas==2.1.4
 numpy==1.26.4
 scikit-learn==1.6.1
-flask==2.0.1
-functions-framework==3.0.0
 psycopg2-binary==2.9.10
 orjson==3.10.16
